@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aura — Mindful Feed</title>
+<meta name="description" content="A calm, no-likes, no-comments feed of science breakthroughs, wellbeing, wisdom and wholesome moments.">
+<meta property="og:title" content="Aura — Mindful Feed">
+<meta property="og:description" content="No likes. No comments. No doomscrolling. Just a short, finite feed worth reading.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#080c14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6fa" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Aura">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23080c14'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%2322d3ee'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Set theme before first paint (no flash). Falls back to the device's preference. -->
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('aura_theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') {
+    t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  document.documentElement.dataset.theme = t;
+})();
+</script>
+
+<style>
+:root {
+  --bg: #080c14; --text: #f1f5f9; --muted: #94a3b8; --faint: #64748b;
+  --card: rgba(17,24,39,.72); --line: rgba(255,255,255,.09);
+  --chip: rgba(30,41,59,.65); --chip-line: rgba(100,116,139,.3);
+  --chip-on-bg: #f1f5f9; --chip-on-fg: #020617;
+  --accent: #22d3ee; --good: #34d399; --danger: #fb7185;
+  --inset: rgba(2,6,23,.5); --bar: rgba(8,12,20,.82); --dock: rgba(15,23,42,.88);
+  --glow-a: rgba(6,182,212,.16); --glow-b: rgba(139,92,246,.12); --glow-c: rgba(16,185,129,.1);
+  --shadow: 0 10px 30px -12px rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f4f6fa; --text: #0f172a; --muted: #475569; --faint: #64748b;
+  --card: rgba(255,255,255,.88); --line: rgba(15,23,42,.09);
+  --chip: rgba(255,255,255,.7); --chip-line: rgba(15,23,42,.12);
+  --chip-on-bg: #0f172a; --chip-on-fg: #f8fafc;
+  --accent: #0e7490; --good: #047857; --danger: #be123c;
+  --inset: rgba(241,245,249,.9); --bar: rgba(244,246,250,.85); --dock: rgba(255,255,255,.9);
+  --glow-a: rgba(6,182,212,.14); --glow-b: rgba(139,92,246,.1); --glow-c: rgba(16,185,129,.1);
+  --shadow: 0 10px 30px -14px rgba(15,23,42,.25);
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; scroll-behavior: smooth; }
+body {
+  margin: 0; min-height: 100vh; min-height: 100dvh;
+  font: 400 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent; transition: background .3s, color .3s;
+}
+button, a { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; background: none; border: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+h1, h2, p, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.icon { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* Ambient glow */
+.glow { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.glow i { position: absolute; width: 24rem; height: 24rem; border-radius: 50%; filter: blur(64px); }
+.glow i:nth-child(1) { top: -8rem; left: -8rem; background: var(--glow-a); }
+.glow i:nth-child(2) { top: 33%; right: -8rem; background: var(--glow-b); }
+.glow i:nth-child(3) { bottom: -8rem; left: 25%; background: var(--glow-c); }
+
+/* Header */
+.top {
+  position: fixed; inset: 0 0 auto 0; z-index: 30;
+  padding-top: max(env(safe-area-inset-top), .75rem);
+  background: var(--bar); border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+}
+.wrap { max-width: 30rem; margin: 0 auto; padding: 0 1rem; }
+.top .wrap { padding-bottom: .6rem; }
+.brand-row { display: flex; align-items: center; justify-content: space-between; padding: .25rem 0 .6rem; }
+.brand { display: flex; align-items: center; gap: .6rem; }
+.orb { width: 2rem; height: 2rem; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #06b6d4, #6366f1); }
+.orb span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: #020617; }
+.orb span::after { content: ""; width: .6rem; height: .6rem; border-radius: 50%; background: #22d3ee; animation: pulse 3s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; transform: scale(.8); } }
+.brand h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }
+.badge { display: inline-flex; align-items: center; gap: .35rem; font-size: .72rem; font-weight: 500; padding: .25rem .65rem; border-radius: 99px; color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); border: 1px solid color-mix(in srgb, var(--good) 28%, transparent); }
+.badge::before { content: ""; width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
+
+.pills { display: flex; gap: .5rem; overflow-x: auto; padding: .15rem 0; scrollbar-width: none; -ms-overflow-style: none; }
+.pills::-webkit-scrollbar { display: none; }
+.pill { flex: none; font-size: .8rem; font-weight: 500; padding: .4rem .9rem; border-radius: 99px; color: var(--muted); background: var(--chip); border: 1px solid var(--chip-line); transition: background .2s, color .2s; }
+.pill:hover { color: var(--text); }
+.pill[aria-pressed="true"] { background: var(--chip-on-bg); color: var(--chip-on-fg); border-color: transparent; }
+
+/* Layout */
+main { position: relative; z-index: 1; max-width: 30rem; margin: 0 auto; padding: 8.5rem 1rem 8rem; }
+.view > * + * { margin-top: 1.25rem; }
+.view-head h2 { font-size: 1.15rem; font-weight: 700; letter-spacing: -.01em; }
+.view-head p { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
+
+/* Cards */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 1.5rem; overflow: hidden; box-shadow: var(--shadow); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.hero { position: relative; height: 12rem; background: linear-gradient(135deg, #0e7490, #4338ca); overflow: hidden; }
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .7s; }
+.card:hover .hero img { transform: scale(1.04); }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,6,23,.85), rgba(2,6,23,.1) 60%, transparent); pointer-events: none; }
+.hero.fail img { display: none; }
+.tag { position: absolute; z-index: 1; top: .75rem; font-size: .72rem; font-weight: 500; padding: .25rem .65rem; border-radius: 99px; color: #e2e8f0; background: rgba(2,6,23,.62); border: 1px solid rgba(255,255,255,.12); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.tag.l { left: .75rem; color: #67e8f9; } .tag.r { right: .75rem; }
+.body { padding: 1rem 1.1rem 1rem; display: grid; gap: .75rem; }
+.src { display: flex; align-items: center; gap: .5rem; font-size: .76rem; font-weight: 500; color: var(--muted); }
+.src::before { content: ""; width: .4rem; height: .4rem; border-radius: 50%; background: var(--accent); }
+.body h2 { font-size: 1.02rem; font-weight: 700; line-height: 1.35; letter-spacing: -.01em; }
+.tldr { background: var(--inset); border: 1px solid var(--line); border-radius: .9rem; padding: .75rem .85rem; font-size: .82rem; }
+.tldr h3 { margin: 0 0 .4rem; display: flex; align-items: center; gap: .4rem; font-size: .76rem; font-weight: 600; color: var(--accent); }
+.tldr ul { display: grid; gap: .35rem; color: var(--muted); line-height: 1.5; }
+.tldr li { display: flex; gap: .45rem; }
+.tldr li::before { content: "•"; color: var(--accent); }
+.actions { display: flex; align-items: center; justify-content: space-between; padding-top: .5rem; border-top: 1px solid var(--line); }
+.note { display: flex; align-items: center; gap: .35rem; font-size: .72rem; color: var(--muted); }
+.note .icon { color: var(--good); width: .9rem; height: .9rem; }
+.btns { display: flex; gap: .25rem; }
+.ib { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: .8rem; color: var(--muted); transition: background .2s, color .2s; }
+.ib:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
+.ib[aria-pressed="true"] { color: var(--accent); }
+.ib[aria-pressed="true"] .icon { fill: currentColor; }
+
+.empty, .done { text-align: center; padding: 2rem 1.5rem; display: grid; gap: .5rem; justify-items: center; }
+.empty .icon, .done .icon { width: 2rem; height: 2rem; color: var(--faint); }
+.done .icon { color: var(--good); }
+.empty strong, .done strong { font-size: .92rem; }
+.empty p, .done p { font-size: .8rem; color: var(--muted); max-width: 20rem; }
+
+/* Settings */
+.panel { padding: 1rem; display: grid; gap: .75rem; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.row-l { display: flex; align-items: center; gap: .75rem; }
+.chip-ic { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: .8rem; color: #818cf8; background: rgba(99,102,241,.15); }
+[data-theme="light"] .chip-ic { color: #b45309; background: rgba(245,158,11,.16); }
+.row strong { display: block; font-size: .88rem; font-weight: 600; }
+.row small { font-size: .76rem; color: var(--muted); }
+.label { font-size: .76rem; font-weight: 600; color: var(--muted); }
+.switch { position: relative; flex: none; width: 2.8rem; height: 1.6rem; border-radius: 99px; background: var(--chip-line); transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: .2rem; left: .2rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(1.2rem); }
+.manifesto h3 { margin: 0; display: flex; align-items: center; gap: .4rem; font-size: .76rem; font-weight: 600; color: var(--accent); }
+.manifesto p { font-size: .82rem; line-height: 1.6; color: var(--muted); }
+.manifesto strong { color: var(--text); }
+.link-danger { display: block; margin: 0 auto; padding: .5rem; font-size: .8rem; color: var(--danger); text-decoration: underline; text-underline-offset: 4px; }
+
+/* Dock */
+.dock { position: fixed; z-index: 30; inset: auto 0 max(env(safe-area-inset-bottom), 1rem) 0; display: flex; justify-content: center; pointer-events: none; }
+.dock nav { pointer-events: auto; display: flex; gap: .25rem; padding: .35rem; border-radius: 99px; background: var(--dock); border: 1px solid var(--line); box-shadow: 0 10px 40px -10px rgba(0,0,0,.45); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
+.tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: .15rem; min-width: 4.8rem; padding: .45rem .75rem; border-radius: 99px; font-size: .68rem; font-weight: 500; color: var(--muted); transition: color .2s, background .2s; }
+.tab:hover { color: var(--text); }
+.tab[aria-current="page"] { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.dot { position: absolute; top: .4rem; right: 1.35rem; width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--dock); }
+
+/* Toast */
+.toast { position: fixed; z-index: 50; top: calc(max(env(safe-area-inset-top), .75rem) + 6.5rem); left: 50%; transform: translate(-50%, -6px); opacity: 0; pointer-events: none; display: flex; align-items: center; gap: .45rem; padding: .5rem 1rem; font-size: .8rem; border-radius: 99px; background: var(--dock); border: 1px solid var(--line); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); transition: opacity .25s, transform .25s; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast .icon { color: var(--accent); width: .95rem; height: .95rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+
+<body>
+<div class="glow" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="orb" aria-hidden="true"><span></span></div>
+        <h1>Aura</h1>
+      </div>
+      <span class="badge">Calm feed</span>
+    </div>
+    <div id="pills" class="pills" role="group" aria-label="Filter by category"></div>
+  </div>
+</header>
+
+<main>
+  <section id="view-feed" class="view" aria-label="Feed">
+    <div id="feedList" class="view" style="display:grid;gap:1.25rem"></div>
+  </section>
+
+  <section id="view-bookmarks" class="view" aria-label="Saved insights" hidden>
+    <div class="view-head">
+      <h2>Saved insights</h2>
+      <p>Your personal archive of articles and papers worth keeping.</p>
+    </div>
+    <div id="bookmarkList" style="display:grid;gap:1.25rem"></div>
+  </section>
+
+  <section id="view-settings" class="view" aria-label="Settings" hidden>
+    <div class="view-head">
+      <h2>Settings</h2>
+      <p>Shape your own quiet space.</p>
+    </div>
+
+    <div class="card panel">
+      <div class="row">
+        <div class="row-l">
+          <div id="themeIcon" class="chip-ic" aria-hidden="true"></div>
+          <div>
+            <strong>Appearance</strong>
+            <small id="themeLabel">Dark theme</small>
+          </div>
+        </div>
+        <button id="themeSwitch" class="switch" role="switch" aria-checked="true" aria-label="Dark theme"></button>
+      </div>
+    </div>
+
+    <div class="card panel">
+      <div class="label">Topics in your feed</div>
+      <div id="topicList" style="display:grid;gap:.5rem"></div>
+    </div>
+
+    <div class="card panel manifesto">
+      <h3><span id="shieldIc"></span>Aura manifesto</h3>
+      <p><strong>No public likes. No comments. No endless scroll.</strong></p>
+      <p>Only high-density knowledge, scientific progress, mental grounding and wholesome moments, shared with you and your trusted circle.</p>
+    </div>
+
+    <button class="link-danger" data-action="clear">Clear saved bookmarks</button>
+  </section>
+</main>
+
+<div class="dock">
+  <nav aria-label="Main">
+    <button class="tab" data-tab="feed"><span data-icon="home"></span>Feed</button>
+    <button class="tab" data-tab="bookmarks"><span data-icon="bookmark"></span>Saved<i id="dot" class="dot" hidden></i></button>
+    <button class="tab" data-tab="settings"><span data-icon="sliders"></span>Settings</button>
+  </nav>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"><span data-icon="check"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ---------- Content ----------
+   Replace these sample items with real stories. sourceUrl should point to the exact article. */
+const POSTS = [
+  { id: 'post-1', category: 'breakthroughs', categoryName: 'Science & Chemistry', sourceName: 'ScienceDaily / Nature', sourceUrl: 'https://www.sciencedaily.com', timeAgo: '2h ago',
+    title: 'Novel Bioluminescent Micro-Enzyme Synthesized for Non-Invasive Cellular Imaging',
+    image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=75',
+    points: ['Researchers engineered a shelf-stable luciferase analog with 4x brighter photon emission.', 'Enables real-time deep tissue monitoring without harsh synthetic fluorescent dyes.', 'Directly applicable to early-stage cellular cancer diagnostics and neuroscience tracking.'] },
+  { id: 'post-2', category: 'wellbeing', categoryName: 'Mental Health & Neuroscience', sourceName: 'Frontiers in Psychology', sourceUrl: 'https://www.frontiersin.org', timeAgo: '4h ago',
+    title: 'Non-Sleep Deep Rest (NSDR) Shown to Accelerate Synaptic Memory Consolidation by 50%',
+    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=75',
+    points: ['A 20-minute daily NSDR or guided Yoga Nidra reset significantly reduces baseline salivary cortisol.', 'Increases striatal dopamine replenishment without sleep inertia or grogginess.', 'Provides an immediate focus reset for creators and deep analytical workers.'] },
+  { id: 'post-3', category: 'wisdom', categoryName: 'Philosophy & Mindfulness', sourceName: 'The Marginalian / Stoic Studies', sourceUrl: 'https://www.themarginalian.org', timeAgo: '6h ago',
+    title: 'The Art of Voluntary Simplicity: Why Modern Content Satiety Leads to Clarity of Thought',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=75',
+    points: ['Reducing notification frequency shifts the brain from reactive vigilance to generative reflection.', 'Solitude without boredom stimulates the Default Mode Network behind novel ideas.', 'Living lightly is not deprivation; it is protecting mental bandwidth for what matters.'] },
+  { id: 'post-4', category: 'breakthroughs', categoryName: 'Biology & Ecology', sourceName: 'Phys.org / Marine Biology', sourceUrl: 'https://phys.org', timeAgo: '8h ago',
+    title: 'Deep-Ocean Coral Reefs Display Surprising Genetic Resilience to Warm Water Currents',
+    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=75',
+    points: ['Newly sequenced mesophotic corals carry heat-shock proteins adapted to fluctuating thermoclines.', 'Biologists are using these strains to seed struggling shallow reefs across the Indo-Pacific.', 'Shows the regenerative power of ocean biodiversity under smart conservation.'] },
+  { id: 'post-5', category: 'wholesome', categoryName: 'Wholesome & Animals', sourceName: 'Uplifting News', sourceUrl: 'https://www.reddit.com/r/aww', timeAgo: '10h ago',
+    title: 'Golden Retriever Guides Lost Baby Otter Back to Wildlife Sanctuary Waters',
+    image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=800&q=75',
+    points: ['A gentle 4-year-old therapy dog stayed beside an orphaned otter cub until rangers arrived.', 'Sanctuary vets report the otter is thriving and due for reintroduction next month.', 'A quiet reminder of empathy and kinship across species.'] }
+];
+
+const CATEGORIES = [
+  { id: 'breakthroughs', label: 'Breakthroughs', topic: 'Science & breakthroughs' },
+  { id: 'wellbeing',     label: 'Wellbeing',     topic: 'Mental health & wellness' },
+  { id: 'wisdom',        label: 'Wisdom',        topic: 'Philosophy & wisdom' },
+  { id: 'wholesome',     label: 'Wholesome',     topic: 'Heartwarming & animal moments' }
+];
+
+/* ---------- Icons (inline, no external library) ---------- */
+const ICONS = {
+  home: '<path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  bookmark: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+  sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>',
+  link: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>',
+  sparkles: '<path d="m12 3 1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2z"/><path d="M19 15v4M17 17h4"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.2-6.4"/>',
+  compass: '<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.1 6.3-6.3 2.1 2.1-6.3z"/>'
+};
+const icon = (n) => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+const hydrateIcons = (root = document) => root.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); });
+
+/* ---------- Helpers ---------- */
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- State ---------- */
+const validIds = new Set(POSTS.map(p => p.id));
+const state = {
+  tab: 'feed',
+  category: 'all',
+  bookmarks: (store.get('aura_bookmarks', []) || []).filter(id => validIds.has(id)),
+  topics: store.get('aura_topics', null) || Object.fromEntries(CATEGORIES.map(c => [c.id, true])),
+  theme: document.documentElement.dataset.theme
+};
+const topicOn = (id) => state.topics[id] !== false;
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg) {
+  $('toastMsg').textContent = msg;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 1800);
+}
+
+/* ---------- Theme ---------- */
+function applyTheme(theme, save) {
+  state.theme = theme;
+  document.documentElement.dataset.theme = theme;
+  if (save) store.set('aura_theme', theme);
+  const dark = theme === 'dark';
+  $('themeIcon').innerHTML = icon(dark ? 'moon' : 'sun');
+  $('themeLabel').textContent = dark ? 'Dark theme' : 'Light theme';
+  $('themeSwitch').setAttribute('aria-checked', String(dark));
+}
+
+/* ---------- Rendering ---------- */
+function cardHTML(p) {
+  const saved = state.bookmarks.includes(p.id);
+  return `
+  <article class="card">
+    <div class="hero">
+      <img src="${esc(p.image)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <span class="tag l">${esc(p.categoryName)}</span>
+      <span class="tag r">${esc(p.timeAgo)}</span>
+    </div>
+    <div class="body">
+      <div class="src">${esc(p.sourceName)}</div>
+      <h2>${esc(p.title)}</h2>
+      <div class="tldr">
+        <h3>${icon('sparkles')}Key takeaways</h3>
+        <ul>${p.points.map(t => `<li><span>${esc(t)}</span></li>`).join('')}</ul>
+      </div>
+      <div class="actions">
+        <span class="note">${icon('shield')}Mindful curation</span>
+        <div class="btns">
+          <button class="ib" data-action="bookmark" data-id="${p.id}" aria-pressed="${saved}" aria-label="${saved ? 'Remove from saved' : 'Save insight'}">${icon('bookmark')}</button>
+          <button class="ib" data-action="share" data-id="${p.id}" aria-label="Share">${icon('share')}</button>
+          <a class="ib" href="${esc(p.sourceUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Read original source (opens in new tab)">${icon('link')}</a>
+        </div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderPills() {
+  const visible = CATEGORIES.filter(c => topicOn(c.id));
+  if (state.category !== 'all' && !topicOn(state.category)) state.category = 'all';
+  const items = [{ id: 'all', label: 'All' }, ...visible];
+  $('pills').innerHTML = items.map(c =>
+    `<button class="pill" data-cat="${c.id}" aria-pressed="${state.category === c.id}">${c.label}</button>`).join('');
+}
+
+function renderFeed() {
+  const list = POSTS.filter(p => topicOn(p.category) && (state.category === 'all' || p.category === state.category));
+  $('feedList').innerHTML = list.length
+    ? list.map(cardHTML).join('') + `
+      <div class="card done">${icon('leaf')}<strong>You're all caught up</strong><p>That's everything for now. Close the app and enjoy your day.</p></div>`
+    : `<div class="card empty">${icon('compass')}<strong>Nothing here yet</strong><p>Turn on more topics in Settings to see stories in this category.</p></div>`;
+}
+
+function renderBookmarks() {
+  const list = POSTS.filter(p => state.bookmarks.includes(p.id));
+  $('bookmarkList').innerHTML = list.length
+    ? list.map(cardHTML).join('')
+    : `<div class="card empty">${icon('bookmark')}<strong>Nothing saved yet</strong><p>Tap the bookmark on any story to keep it here.</p></div>`;
+}
+
+function renderTopics() {
+  $('topicList').innerHTML = CATEGORIES.map(c => `
+    <div class="row">
+      <span style="font-size:.88rem">${c.topic}</span>
+      <button class="switch" role="switch" data-topic="${c.id}" aria-checked="${topicOn(c.id)}" aria-label="${c.topic}"></button>
+    </div>`).join('');
+}
+
+function refresh() {
+  renderPills(); renderFeed(); renderBookmarks();
+  $('dot').hidden = state.bookmarks.length === 0;
+}
+
+/* ---------- Navigation (hash-based so Back works and links are shareable) ---------- */
+const TABS = ['feed', 'bookmarks', 'settings'];
+function showTab(tab) {
+  if (!TABS.includes(tab)) tab = 'feed';
+  state.tab = tab;
+  TABS.forEach(t => { $('view-' + t).hidden = t !== tab; });
+  document.querySelectorAll('.tab').forEach(b => {
+    if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  $('pills').hidden = tab !== 'feed';
+  document.querySelector('main').style.paddingTop = tab === 'feed' ? '' : '6rem';
+  window.scrollTo(0, 0);
+}
+const route = () => showTab(location.hash.replace('#', ''));
+
+/* ---------- Actions ---------- */
+function toggleBookmark(id) {
+  const i = state.bookmarks.indexOf(id);
+  if (i > -1) { state.bookmarks.splice(i, 1); toast('Removed from saved'); }
+  else { state.bookmarks.push(id); toast('Saved'); }
+  store.set('aura_bookmarks', state.bookmarks);
+  refresh();
+}
+
+async function sharePost(id) {
+  const p = POSTS.find(x => x.id === id); if (!p) return;
+  const data = { title: p.title, text: p.title, url: p.sourceUrl };
+  try {
+    if (navigator.share) { await navigator.share(data); return; }
+    await navigator.clipboard.writeText(p.sourceUrl);
+    toast('Link copied');
+  } catch (e) { /* share dialog dismissed */ }
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, a'); if (!t) return;
+  if (t.dataset.tab) { location.hash = t.dataset.tab; return; }
+  if (t.dataset.cat) { state.category = t.dataset.cat; renderPills(); renderFeed(); return; }
+  if (t.dataset.topic) {
+    state.topics[t.dataset.topic] = !topicOn(t.dataset.topic);
+    store.set('aura_topics', state.topics);
+    t.setAttribute('aria-checked', String(topicOn(t.dataset.topic)));
+    refresh(); return;
+  }
+  if (t.id === 'themeSwitch') { applyTheme(state.theme === 'dark' ? 'light' : 'dark', true); toast(state.theme === 'dark' ? 'Dark theme on' : 'Light theme on'); return; }
+  switch (t.dataset.action) {
+    case 'bookmark': toggleBookmark(t.dataset.id); break;
+    case 'share': sharePost(t.dataset.id); break;
+    case 'clear': state.bookmarks = []; store.set('aura_bookmarks', []); refresh(); toast('Saved list cleared'); break;
+  }
+});
+
+/* Broken or blocked images fall back to the gradient behind them */
+document.addEventListener('error', (e) => {
+  if (e.target.tagName === 'IMG') e.target.parentElement.classList.add('fail');
+}, true);
+
+/* ---------- Init ---------- */
+hydrateIcons();
+$('shieldIc').innerHTML = icon('shield');
+applyTheme(state.theme, false);
+renderTopics();
+refresh();
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
